@@ -8,19 +8,19 @@ def registration(request):
     EUMFO=UserMF()
     EPMFO=ProfileMF()
     d={'EUMFO':EUMFO,'EPMFO':EPMFO}
-    if request.method=='POST':
-        UMFDO=UserMF(request.POST)
-        PMFDO=ProfileMF(request.POST,request.FILES)
-        if UMFDO.is_valid() and PMFDO.is_valid():
-            NSU=UMFDO.save()
-            password=UMFDO.cleaned_data['password']
-            NSU.set_password(password)
-            NSU.save()
-            NPS=PMFDO.save()
-            NPS.username=NSU
-            NPS.save()
-            #show the registered data
-            return HttpResponse(str(EUMFO.cleaned_data))
+    if request.method=='POST' and request.FILES:
+        NMUMFDO=UserMF(request.POST)
+        NMPMFDO=ProfileMF(request.POST,request.FILES)
+        if NMUMFDO.is_valid() and NMPMFDO.is_valid():
+            MUMFDO=NMUMFDO.save(commit=False)
+            pw=NMUMFDO.cleaned_data['password']
+            MUMFDO.set_password(pw)
+            MUMFDO.save()
+            MPMFDO=NMPMFDO.save(commit=False)
+            MPMFDO.username=MUMFDO
+            MPMFDO.save()
+            
+            return HttpResponse('registration successful')
             
         else:
             return HttpResponse('Invalid Data')

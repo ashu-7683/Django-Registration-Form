@@ -8,7 +8,7 @@
 <body>
     <center>
         <h1>Registration Form</h1>
-        <form method="post" >
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{EUMFO.as_p}}
             {{EPMFO.as_p}}
