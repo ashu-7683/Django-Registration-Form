@@ -21,11 +21,11 @@ def registration(request):
             MPMFDO.username=MUMFDO
             MPMFDO.save()
             
-            send_mail('registration successful',
-                    'you have been registered successfully',
-                    'ashutoshkhilar5@gmail.com',
-                    [MUMFDO.email],
-                    fail_silently=False)
+            send_mail('registration successful', # subject,
+                    'you have been registered successfully', # message,
+                    'ashutoshkhilar5@gmail.com', # from email,
+                    [MUMFDO.email], # to email,
+                    fail_silently=False )
             
             return HttpResponse('registration successful')
             
