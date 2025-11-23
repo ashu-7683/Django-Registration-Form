@@ -129,8 +129,8 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_HOST='smtp.gmail.com'
-EMAIL_HOST_USER='guddu@gmail.com'
-EMAIL_HOST_PASSWORD='email app password'
+EMAIL_HOST_USER='user@gmail.com'
+EMAIL_HOST_PASSWORD='email app password key'
 EMAIL_PORT=587
-EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+EMAIL_USE_TLS = True #Transport Layer Security
+EMAIL_USE_SSL = False #secure sockets layer

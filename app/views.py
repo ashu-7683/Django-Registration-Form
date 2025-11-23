@@ -23,7 +23,7 @@ def registration(request):
             
             send_mail('registration successful', # subject,
                     'you have been registered successfully', # message,
-                    'ashutoshkhilar5@gmail.com', # from email,
+                    'user@gmail.com', # from email,
                     [MUMFDO.email], # to email,
                     fail_silently=False )
             
