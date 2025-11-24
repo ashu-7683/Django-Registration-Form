@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render,redirect
 
 # Create your views here.
 from app.forms import *
@@ -119,112 +119,75 @@ def reset_password(request):
 
 def forget_password(request):
     if request.method == 'POST':
-        form = EmailForm(request.POST)
-        if form.is_valid():
-            email = form.cleaned_data['email']
-            try:
-                user = User.objects.get(email=email)
-                # Generate OTP
-                otp = OTPModel.generate_otp()
-                # Save OTP to database
-                OTPModel.objects.create(user=user, otp=otp)
-                
-                # Send OTP via email
-                send_mail(
-                    'Password Reset OTP',
-                    f'Your OTP for password reset is: {otp}. This OTP is valid for 10 minutes.',
-                    'ashutoshkhilar5@gmail.com',
-                    [email],
-                    fail_silently=False,
-                )
-                
-                # Store user ID in session for verification
-                request.session['reset_user_id'] = user.id
-                request.session['reset_email'] = email
-                
-                return HttpResponseRedirect(reverse('verify_otp'))
-                
-            except User.DoesNotExist:
-                return HttpResponse("No user found with this email address.")
-    else:
-        form = EmailForm()
+        email = request.POST.get('email')
+        user = User.objects.filter(email=email).first()
+        
+        if user:
+            otp = OTPModel.generate_otp()
+            OTPModel.objects.create(user=user, otp=otp)
+            
+            send_mail(
+                'Password Reset OTP',
+                f'Your OTP is: {otp}. Valid for 10 minutes.',
+                'ashutoshkhilar5@gmail.com',
+                [email],
+                fail_silently=False
+            )
+            
+            request.session['reset_user_id'] = user.id
+            return redirect('verify_otp')
+        
+        return HttpResponse('Email not registered')
     
-    return render(request, 'forget_password.html', {'form': form})
+    return render(request, 'forget_password.html')
 
+# Verify OTP
 def verify_otp(request):
-    # Check if user came from forget password
     if 'reset_user_id' not in request.session:
-        return HttpResponseRedirect(reverse('forget_password'))
+        return redirect('forget_password')
     
     if request.method == 'POST':
-        form = OTPForm(request.POST)
-        if form.is_valid():
-            otp_entered = form.cleaned_data['otp']
-            user_id = request.session['reset_user_id']
-            
-            try:
-                # Get the latest OTP for this user that's not used and not expired
-                otp_obj = OTPModel.objects.filter(
-                    user_id=user_id, 
-                    is_used=False
-                ).latest('created_at')
-                
-                if otp_obj.is_expired():
-                    return HttpResponse("OTP has expired. Please request a new one.")
-                
-                if otp_obj.otp == otp_entered:
-                    # Mark OTP as used
-                    otp_obj.is_used = True
-                    otp_obj.save()
-                    
-                    # Store verification in session
-                    request.session['otp_verified'] = True
-                    return HttpResponseRedirect(reverse('set_new_password'))
-                else:
-                    return HttpResponse("Invalid OTP. Please try again.")
-                    
-            except OTPModel.DoesNotExist:
-                return HttpResponse("OTP not found or already used. Please request a new one.")
-    else:
-        form = OTPForm()
+        entered_otp = request.POST.get('otp')
+        user_id = request.session['reset_user_id']
+        
+        otp_obj = OTPModel.objects.filter(
+            user_id=user_id, 
+            is_used=False
+        ).order_by('-created_at').first()
+        
+        if otp_obj and not otp_obj.is_expired() and otp_obj.otp == entered_otp:
+            otp_obj.is_used = True
+            otp_obj.save()
+            request.session['otp_verified'] = True
+            return redirect('set_new_password')
+        
+        return HttpResponse('Invalid or expired OTP')
     
-    return render(request, 'verify_otp.html', {'form': form})
+    return render(request, 'verify_otp.html')
 
+# Set New Password
 def set_new_password(request):
-    # Check if OTP is verified
-    if 'reset_user_id' not in request.session or not request.session.get('otp_verified'):
-        return HttpResponseRedirect(reverse('forget_password'))
+    if not request.session.get('otp_verified'):
+        return redirect('forget_password')
     
     if request.method == 'POST':
-        form = NewPasswordForm(request.POST)
-        if form.is_valid():
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if new_password == confirm_password:
             user_id = request.session['reset_user_id']
-            new_password = form.cleaned_data['new_password']
+            user = User.objects.filter(id=user_id).first()
             
-            try:
-                user = User.objects.get(id=user_id)
+            if user:
                 user.set_password(new_password)
                 user.save()
                 
-                # Clear session data
+                # Clear session
                 request.session.pop('reset_user_id', None)
-                request.session.pop('reset_email', None)
                 request.session.pop('otp_verified', None)
                 
-                # Send confirmation email
-                send_mail(
-                    'Password Reset Successful',
-                    'Your password has been reset successfully.',
-                    'ashutoshkhilar5@gmail.com',
-                    [user.email],
-                    fail_silently=False,
-                )
-                
-                return HttpResponse("Password reset successfully! You can now login with your new password.")
-                
-            except User.DoesNotExist:
-                return HttpResponse("User not found.")
-    else:
-        form = NewPasswordForm()
+                return HttpResponse('Password reset successful! You can now login.')
+        
+        return HttpResponse('Passwords do not match')
     
-    return render(request, 'set_new_password.html', {'form': form})
+    return render(request, 'set_new_password.html')
