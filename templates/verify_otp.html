@@ -1,0 +1,25 @@
+{% extends 'dummy.html' %}
+
+{% block title %}
+    <title>Verify OTP</title>
+{% endblock %}
+
+{% block body_block %}
+<center>
+    <h1>Verify OTP</h1>
+    <p>We've sent an OTP to your email: <strong>{{ request.session.reset_email }}</strong></p>
+    
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label for="otp">Enter OTP:</label>
+        <input type="text" name="otp" id="otp" maxlength="6" minlength="6" required>
+        <br><br>
+        
+        <input type="submit" value="Verify OTP" class="btn btn-primary">
+    </form>
+    
+    <br>
+    <a href="{% url 'forget_password' %}">Request new OTP</a>
+</center>
+{% endblock %}

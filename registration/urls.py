@@ -30,4 +30,9 @@ urlpatterns = [
     path('change_password/',change_password,name='change_password'),
     path('reset_password/',reset_password,name='reset_password'),
     
+    # Add these new URLs
+    path('forget_password/', forget_password, name='forget_password'),
+    path('verify_otp/', verify_otp, name='verify_otp'),
+    path('set_new_password/', set_new_password, name='set_new_password'),
+    
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
