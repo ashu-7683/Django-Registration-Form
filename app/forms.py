@@ -1,19 +1,25 @@
-from app.models import *
 from django import forms
-
-
-class UserMF(forms.ModelForm):
+from app.models import *
+class UserForm(forms.ModelForm):
     class Meta:
         model=User
         #fields='__all__'
         fields=['username','password','email']
-        #exclude=['username','password','email']
-        help_texts={'username':'','password':'It will be hidden'}
+        help_texts={'username':None}
         widgets={'password':forms.PasswordInput()}
-        
-        
-class ProfileMF(forms.ModelForm):
+
+class ProfileForm(forms.ModelForm):
     class Meta:
         model=Profile
         #fields='__all__'
         exclude=['username']
+
+
+
+
+'''
+While we are sending Parent Tables FOrm Object and
+Child Tables FOrm Object into same HTML page 
+then we should not represent Parent Tables column in 
+Input Elements
+'''
